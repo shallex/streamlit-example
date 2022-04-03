@@ -6,16 +6,16 @@ import streamlit as st
 import psycopg2
 
 
-"""
-# Welcome to Streamlit!
-
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
-
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+# """
+# # Welcome to Streamlit!
+#
+# Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
+#
+# If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
+# forums](https://discuss.streamlit.io).
+#
+# In the meantime, below is an example of what you can do with just a few lines of code:
+# """
 
 
 # with st.echo(code_location='below'):
@@ -82,8 +82,14 @@ with bar:
     ar = df['company'].value_counts()
     c = {}
     for k in companies:
+        # c[k] = int(ar[k]) if ar.get(k) is not None else 0
         c[companies[k]] = int(ar[k]) if ar.get(k) is not None else 0
 
+
     c = pd.DataFrame(c.values(), index=c.keys())
+    st.write(c.T)
     st.bar_chart(c, height=400)
+    #####
+
+    st.bar_chart(c.T, height=400)
 
