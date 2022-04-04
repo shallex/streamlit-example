@@ -18,35 +18,15 @@ import psycopg2
 # """
 
 
-# with st.echo(code_location='below'):
-#     total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-#     num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
-#
-#     Point = namedtuple('Point', 'x y')
-#     data = []
-#
-#     points_per_turn = total_points / num_turns
-#
-#     for curr_point_num in range(total_points):
-#         curr_turn, i = divmod(curr_point_num, points_per_turn)
-#         angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-#         radius = curr_point_num / total_points
-#         x = radius * math.cos(angle)
-#         y = radius * math.sin(angle)
-#         data.append(Point(x, y))
-#
-#     st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-#         .mark_circle(color='#0068c9', opacity=0.5)
-#         .encode(x='x:Q', y='y:Q'))
-
-
 # Initialize connection.
 # Uses st.experimental_singleton to only run once.
 @st.experimental_singleton
 def init_connection():
     return psycopg2.connect(**st.secrets["postgres"])
 
+
 conn = init_connection()
+
 
 # Perform query.
 # Uses st.experimental_memo to only rerun when the query changes or after 10 min.
@@ -57,39 +37,47 @@ def run_query(query):
         columns = [desc[0] for desc in cur.description]
         return cur.fetchall(), columns
 
+
 rows, columns = run_query("SELECT * from users;")
 
+with conn.cursor() as cur:
+    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+    tables = cur.fetchall()
+tables = [t[0] for t in tables]
 
 header = st.container()
 bar = st.container()
 
-# with header:
-#   st.header('Users')
-#   st.write(pd.DataFrame(rows))
-
+with header:
+    input = st.text_input('Password')
+    if input == 'VladaLoveMcDonalds':
+        table = st.selectbox('Choose table to display', options=tables)
+        st.header(table)
+        rows1, columns1 = run_query(f"SELECT * from {table};")
+        df1 = pd.DataFrame(rows1, columns=columns1)
+        st.write(df1)
 
 companies = {
-                # 0: 'Обычные пользователи',
-                # 1: 'MH',
-                2: 'Долгоруковский',
-                3: 'Мичуринский',
-                4: 'Севергрупп'
+    # 0: 'Обычные пользователи',
+    # 1: 'MH',
+    2: 'Долгоруковский',
+    3: 'Мичуринский',
+    4: 'Севергрупп'
 }
 
 with bar:
-    st.header('bar')
-    df = pd.DataFrame(rows, columns=columns)
-    ar = df['company'].value_counts()
-    c = {}
-    for k in companies:
-        # c[k] = int(ar[k]) if ar.get(k) is not None else 0
-        c[companies[k]] = int(ar[k]) if ar.get(k) is not None else 0
+    if input == 'VladaLoveMcDonalds':
+        st.header('Clients')
+        df = pd.DataFrame(rows, columns=columns)
+        ar = df['company'].value_counts()
+        c = {}
+        for k in companies:
+            # c[k] = int(ar[k]) if ar.get(k) is not None else 0
+            c[companies[k]] = int(ar[k]) if ar.get(k) is not None else 0
 
+        c = pd.DataFrame(c.values(), index=c.keys())
+        st.write(c.T)
 
-    c = pd.DataFrame(c.values(), index=c.keys())
-    st.write(c.T)
-    st.bar_chart(c, height=400)
+    # st.bar_chart(c, height=400)
     #####
-
-    st.bar_chart(c.T, height=400)
-
+    # st.bar_chart(c.T, height=400)
